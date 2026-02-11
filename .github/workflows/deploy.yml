@@ -32,7 +32,6 @@ jobs:
           cache-dependency-path: "**/package-lock.json"
 
       - run: npm ci
-        working-directory: ./analysis
 
       # OPTIONAL: cache data-loader results across runs (see section 3 below)
       # - id: date
@@ -40,17 +39,16 @@ jobs:
       # - id: cache-data
       #   uses: actions/cache@v4
       #   with:
-      #     path: analysis/src/.observablehq/cache
-      #     key: data-${{ hashFiles('analysis/src/data/*') }}-${{ steps.date.outputs.date }}
+      #     path: src/.observablehq/cache
+      #     key: data-${{ hashFiles('src/data/*') }}-${{ steps.date.outputs.date }}
 
       - run: npm run build
-        working-directory: ./analysis
 
       # Configure & upload the static site (dist/) as a Pages artifact
       - uses: actions/configure-pages@v4
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: analysis/dist
+          path: dist
 
       # Deploy to GitHub Pages
       - name: Deploy
