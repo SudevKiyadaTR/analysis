@@ -1,0 +1,58 @@
+name: Deploy
+
+on:
+  # Deploy on every push to main
+  push:
+    branches: [main]
+  # Nightly rebuild (keeps static snapshots fresh)
+  schedule:
+    - cron: "15 10 * * *" # 10:15 UTC daily
+  # Manual trigger
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    # Required for GitHub Pages’ OIDC & artifact publishing
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+    # Pages environment (so you get a "View deployment" link)
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+
+      - run: npm ci
+
+      # OPTIONAL: cache data-loader results across runs (see section 3 below)
+      # - id: date
+      #   run: echo "date=$(TZ=America/Los_Angeles date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+      # - id: cache-data
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: src/.observablehq/cache
+      #     key: data-${{ hashFiles('src/data/*') }}-${{ steps.date.outputs.date }}
+
+      - run: npm run build
+
+      # Configure & upload the static site (dist/) as a Pages artifact
+      - uses: actions/configure-pages@v4
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      # Deploy to GitHub Pages
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
